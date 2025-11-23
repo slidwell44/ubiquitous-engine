@@ -3,13 +3,16 @@ import hello_pb2_grpc
 from concurrent import futures
 import logging
 import grpc
+from grpc_reflection.v1alpha import reflection
 
 
 class Greeter(hello_pb2_grpc.GreeterServicer):
+    # pyrefly: ignore [bad-override]
     def SayHello(self, request, context):
         print(f"Received request: {request.name}")
         return hello_pb2.HelloReply(message=f"Hello, {request.name}!")
 
+    # pyrefly: ignore [bad-override]
     def SayHelloAgain(self, request, context):
         return hello_pb2.HelloReply(message=f"Hello again, {request.name}!")
 
@@ -19,6 +22,12 @@ def serve():
 
     hello_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
 
+    SERVICE_NAMES = (
+    hello_pb2.DESCRIPTOR.services_by_name['Greeter'].full_name,
+    reflection.SERVICE_NAME,
+    )
+    reflection.enable_server_reflection(SERVICE_NAMES, server)
+    
     server.add_insecure_port("[::]:50051")
 
     print("Server started on port 50051")
